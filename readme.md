@@ -1,8 +1,6 @@
-Of course. Here is the GitHub repository draft formatted as a standard response.
+## **Online Shopping Webapp Deployment on Kubernetes**
 
-### **GitHub Repo: Online Shopping Webapp Deployment on Kubernetes**
-
-This repository provides a comprehensive guide to deploying a pre-built online shopping web application frontend on a Kubernetes cluster. It covers two deployment approaches: the traditional Deployment/Service method and an alternative method using a hypothetical `kubernetes-mcp` server. Additionally, it includes instructions for setting up observability using the `kube-prometheus-stack` Helm chart.
+This repository provides a comprehensive guide to deploying a pre-built online shopping web application frontend on a Kubernetes cluster. It covers two deployment approaches: the traditional Deployment/Service method and an alternative method using a `kubernetes-mcp` server along with Amazon Q. Additionally, it includes instructions for setting up observability using the `kube-prometheus-stack` Helm chart.
 
 **Prerequisite:** You should have a pre-built application container image hosted on a container registry like Docker Hub.
 
@@ -53,7 +51,7 @@ spec:
     spec:
       containers:
       - name: shopping-app
-        image: your-dockerhub-image:latest # <-- IMPORTANT: Replace with your image
+        image: trainwithshubham/easyshop-app:latest 
         ports:
         - containerPort: 80
 ```
@@ -71,7 +69,7 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
-  type: LoadBalancer
+  type: NodePort
 ```
 
 To deploy, apply these manifests:
@@ -82,33 +80,51 @@ kubectl apply -f kubernetes/traditional/service.yaml
 
 #### **2.2. Alternative Deployment (kubernetes-mcp)**
 
-This method uses a hypothetical `kubernetes-mcp` (Multi-Cluster/Cloud Platform) server, which simplifies deployment across multiple environments.
+This method uses a  `kubernetes-mcp` (Multi-Cluster/Cloud Platform) server along with Amazon Q CLI, which simplifies deployment across multiple environments.
 
-**`kubernetes/mcp/mcp-deployment.yaml`**:
-```yaml
-apiVersion: mcp.k8s.io/v1alpha1
-kind: Application
-metadata:
-  name: shopping-app-mcp
-spec:
-  template:
-    spec:
-      containers:
-      - name: shopping-app
-        image: your-dockerhub-image:latest # <-- IMPORTANT: Replace with your image
-        ports:
-        - containerPort: 80
-  placement:
-    clusters:
-    - name: cluster-1
-    - name: cluster-2
-```
+I was using the WSL interface and here are the commands to download Amazon Q CLI and the Kubernetes MCP Server
 
-To deploy using `kubernetes-mcp`, you would use the `mcp` CLI:
-```bash
-mcpctl apply -f kubernetes/mcp/mcp-deployment.yaml
-```
+Download installation zip file:
+curl --proto '=https' --tlsv1.2 -sSf "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip" -o "q.zip"
 
+    Unzip the installer:unzip q.zip
+    Run the install program:./q/install.shBy default, the files are installed to ~/.local/bin.
+    
+Install Amazon Q debian file
+sudo apt install -y ./amazon-q.deb
+q login
+
+You can login with the free builder ID. Once done you can access the CLI with the command 'q'
+
+Next step is to download the MCP Server which I have done using the uvx
+
+sudo snap install astral-uv --classic
+Now create a file called mcp.json in ~/.aws/amazonq
+and add this
+
+{
+  "mcpServers": {
+    "awslabs.cdk-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.cdk-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      }
+    },
+    "kubernetes": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "kubernetes-mcp-server@latest"
+      ]
+    }
+  }
+}
+
+
+
+Now run q again
+This gives you the capability to deploy kubernetes resources using prompts
 ---
 
 ### **3. Observability with Kube-Prometheus-Stack**
