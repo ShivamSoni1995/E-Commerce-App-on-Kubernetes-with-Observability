@@ -85,41 +85,47 @@ This method uses a  `kubernetes-mcp` (Multi-Cluster/Cloud Platform) server along
 I was using the WSL interface and here are the commands to download Amazon Q CLI and the Kubernetes MCP Server
 
 Download installation zip file:
-curl --proto '=https' --tlsv1.2 -sSf "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip" -o "q.zip"
 
+
+
+    curl --proto '=https' --tlsv1.2 -sSf "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip" -o "q.zip"
     Unzip the installer:unzip q.zip
     Run the install program:./q/install.shBy default, the files are installed to ~/.local/bin.
     
 Install Amazon Q debian file
-sudo apt install -y ./amazon-q.deb
-q login
+
+    sudo apt install -y ./amazon-q.deb
+    q login
+
 
 You can login with the free builder ID. Once done you can access the CLI with the command 'q'
 
 Next step is to download the MCP Server which I have done using the uvx
-
-sudo snap install astral-uv --classic
+    
+    sudo snap install astral-uv --classic
+    
 Now create a file called mcp.json in ~/.aws/amazonq
 and add this
 
-{
-  "mcpServers": {
-    "awslabs.cdk-mcp-server": {
-      "command": "uvx",
-      "args": ["awslabs.cdk-mcp-server@latest"],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR"
+    
+    {
+    "mcpServers": {
+      "awslabs.cdk-mcp-server": {
+        "command": "uvx",
+        "args": ["awslabs.cdk-mcp-server@latest"],
+        "env": {
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        }
+      },
+      "kubernetes": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "kubernetes-mcp-server@latest"
+        ]
       }
-    },
-    "kubernetes": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "kubernetes-mcp-server@latest"
-      ]
+    }  
     }
-  }
-}
 
 
 
@@ -142,8 +148,14 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 
 # Install the kube-prometheus-stack chart
-helm install prometheus-stack prometheus-community/kube-prometheus-stack \
-  --namespace monitoring --create-namespace
+helm install kube-prometheus-stack \
+
+  --create-namespace \
+
+  --namespace kube-prometheus-stack \
+
+  prometheus-community/kube-prometheus-stack
+
 ```
 
 Run this script to set up your monitoring stack:
